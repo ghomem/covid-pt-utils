@@ -6,7 +6,6 @@ Created on Sun Mar 21 17:11:21 2021
 """
 # Libraries needed for the tutorial
 
-import pandas as pd
 import requests
 import io
 import datetime
