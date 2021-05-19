@@ -15,8 +15,8 @@ import os.path
 from os import path
 
 csv_url = [ "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data.csv",
-            "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/amostras.csv,",
-            "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/mortalidade.csv",
+            "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/amostras.csv",
+            "https://raw.githubusercontent.com/dssg-pt/dados-SICOeVM/master/mortalidade.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/vacinas.csv",
           ]
 
