@@ -19,6 +19,7 @@ csv_url = [ "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/dat
             "https://raw.githubusercontent.com/dssg-pt/dados-SICOeVM/master/mortalidade.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/vacinas.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_14dias.csv",
+            "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_incidencia.csv",
           ]
 
 parser = argparse.ArgumentParser(description='Download DSSG files')
