@@ -18,9 +18,11 @@ from os import path
 
 SIZE_MIN = 37
 SIZE_MAX = 150
+BASE_URL = 'covid19.min-saude.pt'
 
 # usually the lates file is from the previous day
 my_date   = datetime.date.today() - datetime.timedelta(days = 1)
+
 
 date_str  = str(my_date)
 date_year = my_date.year
@@ -29,7 +31,7 @@ date_mon  = str(my_date.month).zfill(2) # to ensure we have the leading zero for
 url_list = []
 
 for size in range (SIZE_MIN, SIZE_MAX):
-    dgs_url = f"""https://covid19.min-saude.pt/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_xls-{size}kb.xlsx"""
+    dgs_url = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_xls-{size}kb.xlsx"""
     url_list.append(dgs_url)
 
 parser = argparse.ArgumentParser(description='Download DGS files')
