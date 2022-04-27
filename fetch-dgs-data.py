@@ -20,6 +20,9 @@ SIZE_MIN = 37
 SIZE_MAX = 150
 BASE_URL = 'covid19.min-saude.pt'
 
+# our health authority provides daily files with randomly variant names components
+VARIANCE = [ 'xls', 'xlsx', 'excel' ]
+
 # usually the lates file is from the previous day
 my_date   = datetime.date.today() - datetime.timedelta(days = 1)
 
@@ -31,8 +34,12 @@ date_mon  = str(my_date.month).zfill(2) # to ensure we have the leading zero for
 url_list = []
 
 for size in range (SIZE_MIN, SIZE_MAX):
-    dgs_url = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_xls-{size}kb.xlsx"""
-    url_list.append(dgs_url)
+    for substr in VARIANCE:
+        # almost the same but the difference is the hiphen vs the underscore before subsstr
+        dgs_url1 = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_{substr}-{size}kb.xlsx"""
+        dgs_url2 = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}-{substr}-{size}kb.xlsx"""
+        url_list.append(dgs_url1)
+        url_list.append(dgs_url2)
 
 parser = argparse.ArgumentParser(description='Download DGS files')
 parser.add_argument('path', type=str, help='path to where files will be stored')
