@@ -11,18 +11,22 @@ INITIAL_DATE_STR = '26-02-2020'
 PATCH_DATE_STR   = '14-03-2022' # the day after the data from DSSG stopped flowing
 PATCH_DATE_STR_D = '2022-03-14' # the DSG files use a different format
 
+HOSP_PATCH_DATE_STR = '15-03-2022' # the first weekly hospitalizations record from the DSSG file
+
 INITIAL_DATE = datetime.datetime.strptime(INITIAL_DATE_STR,'%d-%m-%Y').date()
 PATCH_DATE   = datetime.datetime.strptime(PATCH_DATE_STR,'%d-%m-%Y').date()
 
 # this is a very complete file from the awesome DSSG-PT group, we saved the last complete version
 # to inspect only the new cases and deaths we can use
-# csvtool -t ',' col 1,12,14  tomerge/data-2022-03-13.csv | csvtool -t ',' readable
+# csvtool -t ',' col 1,12,14,15,16 data-2022-03-13.csv | csvtool -t ',' readable
 
 # despite the name, this file has the last data at 2022-03-13
 DSSG_FILE = 'data-2022-03-20.csv'
 
 DGS_SUBDIR = 'dgs/'
+DSSG_LATEST_SUBDIR = 'dssg/'
 MERGED_DATA_SUBDIR = 'merged/'
+
 
 ### FUNCTIONS ###
 
@@ -103,7 +107,7 @@ dates, last_date  = mk_dates(PATCH_DATE, ndays)
 
 # the deaths need to be cumulative, and the last value from DSSG needs to be added
 
-cum_deaths = np.cumsum(deaths) +  dssg_data.iloc[-1]['obitos']
+cum_deaths = np.cumsum(deaths) + dssg_data.iloc[-1]['obitos']
 
 # let's create a dataframe with the DSSG naming, the remaining columns are filled with NaN
 
@@ -115,6 +119,30 @@ merged_dssg_data = dssg_data.append(extra_dssg_data, ignore_index = True, sort =
 
 print_summary(merged_dssg_data)
 
+# now let's look for the latest dssg file to extract the hospitalizations data
+
+dssg_file_list = glob.glob(base_path + DSSG_LATEST_SUBDIR + 'data-*.csv')
+dssg_latest_path = max(dssg_file_list, key=os.path.getctime)
+
+dssg_latest_data = pd.read_csv(dssg_latest_path)
+
+index = dssg_latest_data.loc[ dssg_latest_data['data'] == HOSP_PATCH_DATE_STR ].index[0]
+
+dssg_latest_data_tail = dssg_latest_data.loc[index:]
+
+for d in dssg_latest_data_tail['data']:
+    hospitalized     = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados'].values[0]
+    hospitalized_uci = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados_uci'].values[0]
+
+    idx = merged_dssg_data.loc[ merged_dssg_data['data'] == d ].index[0]
+    merged_dssg_data.at[idx, 'internados']     = hospitalized
+    merged_dssg_data.at[idx, 'internados_uci'] = hospitalized_uci
+
+# now let's interpolate to compensate for the spaced hospitalization data
+
+merged_dssg_data['internados']     = merged_dssg_data['internados'].interpolate()
+merged_dssg_data['internados_uci'] = merged_dssg_data['internados_uci'].interpolate()
+
 # now let's write to CSV
 
 merged_file = 'data-' + str(last_date) + '.csv'
@@ -123,4 +151,10 @@ merged_path = base_path + MERGED_DATA_SUBDIR + merged_file
 
 print('\nSaving CSV at', merged_path)
 
+# can be inspected with
+# csvtool -t ',' col 1,12,14,15,16  /path/to/data/merged/data-2022-06-02.csv  |csvtool -t ',' readable - |less
+
 merged_dssg_data.to_csv(merged_path, index=False)
+
+print('\nInspect with:\n', 'csvtool -t \',\' col 1,12,14,15,16', merged_path, '|csvtool -t \',\' readable - |less' )
+
