@@ -130,13 +130,17 @@ index = dssg_latest_data.loc[ dssg_latest_data['data'] == HOSP_PATCH_DATE_STR ].
 
 dssg_latest_data_tail = dssg_latest_data.loc[index:]
 
+# let's fetch the weekly values and try to insert them in the extended dataframe
 for d in dssg_latest_data_tail['data']:
     hospitalized     = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados'].values[0]
     hospitalized_uci = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados_uci'].values[0]
 
-    idx = merged_dssg_data.loc[ merged_dssg_data['data'] == d ].index[0]
-    merged_dssg_data.at[idx, 'internados']     = hospitalized
-    merged_dssg_data.at[idx, 'internados_uci'] = hospitalized_uci
+    # protect the case where the dates are not found (ex: DGS file is too outdated)
+    aux = merged_dssg_data.loc[ merged_dssg_data['data'] == d ]
+    if not aux.empty:
+        idx = aux.index[0]
+        merged_dssg_data.at[idx, 'internados']     = hospitalized
+        merged_dssg_data.at[idx, 'internados_uci'] = hospitalized_uci
 
 # now let's interpolate to compensate for the spaced hospitalization data
 
