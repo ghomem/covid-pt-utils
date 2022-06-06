@@ -16,15 +16,14 @@ from os import path
 # we try different file size strings until one works
 # "SIZE_MAX ought to be enough for anybody"
 
-SIZE_MIN = 37
+SIZE_MIN = 50
 SIZE_MAX = 150
 BASE_URL = 'covid19.min-saude.pt'
 
 # our health authority provides daily files with randomly variant names components
 VARIANCE = [ 'xls', 'xlsx', 'excel' ]
 
-# usually the lates file is from the previous day
-my_date   = datetime.date.today() - datetime.timedelta(days = 1)
+my_date   = datetime.date.today()
 
 
 date_str  = str(my_date)
