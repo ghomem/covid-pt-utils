@@ -16,7 +16,7 @@ from os import path
 # we try different file size strings until one works
 # "SIZE_MAX ought to be enough for anybody"
 
-SIZE_MIN = 50
+SIZE_MIN = 30
 SIZE_MAX = 150
 BASE_URL = 'covid19.min-saude.pt'
 

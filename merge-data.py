@@ -74,7 +74,7 @@ def get_dgs_info( dgs_dir ):
 # gets the most recent DSSG info
 def get_dssg_info( dssg_dir ):
 
-    dssg_file_list = glob.glob(base_path + DSSG_LATEST_SUBDIR + 'data-*.csv')
+    dssg_file_list = glob.glob(dssg_dir + 'data-*.csv')
     dssg_path      = max(dssg_file_list, key=os.path.getctime)
 
     dssg_data = pd.read_csv(dssg_path)
