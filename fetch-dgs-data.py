@@ -16,8 +16,8 @@ from os import path
 # we try different file size strings until one works
 # "SIZE_MAX ought to be enough for anybody"
 
-SIZE_MIN = 30
-SIZE_MAX = 150
+SIZE_MIN = 40
+SIZE_MAX = 60
 BASE_URL = 'covid19.min-saude.pt'
 
 # our health authority provides daily files with randomly variant names components
@@ -28,6 +28,7 @@ VARIANCE = [ 'xls', 'xlsx', 'excel' ]
 yesterday = datetime.date.today() - datetime.timedelta(days = 1)
 today     = datetime.date.today()
 
+# yesterday and then today
 date_strs = [ str(yesterday), str(today) ]
 
 date_year = today.year
@@ -65,12 +66,21 @@ else :
 
 # Downloading the xls file + giving acceptable name
 
+downloads = []
 print('\n')
+
 for url in url_list:
     print('Trying ' + url)
     name_path_xls = os.path.basename(url)
     # fix the stupid name given by DGS ( _xls-37kb ... )
-    file_name_path = 'covid_dados' + '-' + date_str + '.xlsx'
+    if date_strs[0] in name_path_xls:
+        print ('URL from yesterday')
+        my_date = date_strs[0]
+    if date_strs[1] in name_path_xls:
+        print ('URL file from today')
+        my_date = date_strs[1]
+
+    file_name_path = 'covid_dados' + '-' + my_date + '.xlsx'
     req = requests.get(url)
     status_code = req.status_code
     print('Status ' + str(status_code) + '\n')
@@ -82,6 +92,12 @@ for url in url_list:
         xls_file = open(new_file_namepath, 'wb')
         xls_file.write(url_content)
         xls_file.close()
-        print('Wrote ' + new_file_namepath)
-        exit(0)
+        print('Wrote ' + new_file_namepath+ '\n')
+        downloads.append(new_file_namepath)
 
+        # exit if we have yesterday and today already
+        if len(downloads) == 2:
+            print('Downloaded files', downloads)
+            exit(0)
+
+print('Downloaded files', downloads)
