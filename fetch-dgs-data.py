@@ -18,10 +18,19 @@ from os import path
 
 SIZE_MIN = 40
 SIZE_MAX = 60
-BASE_URL = 'covid19.min-saude.pt'
 
 # our health authority provides daily files with randomly variant names components
 VARIANCE = [ 'xls', 'xlsx', 'excel' ]
+
+### Main
+
+parser = argparse.ArgumentParser(description='Download DGS files')
+parser.add_argument('path',      type=str, help='path to where files will be stored')
+parser.add_argument('base_url',  type=str, help='base URL from where the files will be downloaded')
+args = parser.parse_args()
+
+path_args = args.path
+base_url  = args.base_url
 
 # our heath authority sometimes names the files with the date of the upload day
 # and other times with the date of the previous day... sic transit glori mundi
@@ -40,15 +49,10 @@ for date_str in date_strs:
     for size in range (SIZE_MIN, SIZE_MAX):
         for substr in VARIANCE:
             # almost the same but the difference is the hiphen vs the underscore before subsstr
-            dgs_url1 = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_{substr}-{size}kb.xlsx"""
-            dgs_url2 = f"""https://{BASE_URL}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}-{substr}-{size}kb.xlsx"""
+            dgs_url1 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_{substr}-{size}kb.xlsx"""
+            dgs_url2 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}-{substr}-{size}kb.xlsx"""
             url_list.append(dgs_url1)
             url_list.append(dgs_url2)
-
-parser = argparse.ArgumentParser(description='Download DGS files')
-parser.add_argument('path', type=str, help='path to where files will be stored')
-args = parser.parse_args()
-path_args = args.path
 
 # check if path exists and is a directory, return error otherwise
 if os.path.exists(path_args) is not True: 
