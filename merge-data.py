@@ -154,10 +154,10 @@ def merge_testing_data ( dssg_testing_data, ecdc_testing_data, patch_date ):
     # this is the list of fields of this file
     # data,amostras,amostras_novas,amostras_pcr,amostras_pcr_novas,amostras_antigenio,amostras_antigenio_novas
     # we only have amostras, the rest is filled with NaN
-    extra_testing_data = pd.DataFrame( {'data': dates, 'amostras': tests_daily, } )
+    extra_testing_data = pd.DataFrame( {'data': dates, 'amostras_novas': tests_daily, } )
 
     # interpolate the weekly value
-    extra_testing_data['amostras'] = extra_testing_data['amostras'].interpolate()
+    extra_testing_data['amostras_novas'] = extra_testing_data['amostras_novas'].interpolate()
 
     # and finally let's merge the dataframes
     merged_testing_data = dssg_testing_data.append(extra_testing_data, ignore_index=True, sort=False)
