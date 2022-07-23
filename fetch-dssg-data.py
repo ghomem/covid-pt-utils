@@ -20,13 +20,17 @@ csv_url = [ "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/dat
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/vacinas.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_14dias.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_incidencia.csv",
-            "https://opendata.ecdc.europa.eu/covid19/testing/csv/data.csv", # we need this complementary file from ECDC because DSSG does not have "amostras" anymore
           ]
 
 parser = argparse.ArgumentParser(description='Download DSSG files')
-parser.add_argument('path', type=str, help='path to where files will be stored')
+
+parser.add_argument('path',      type=str, help='path to where files will be stored')
+parser.add_argument('ecdc_host', type=str, help='path to the ECDC host')
+
 args = parser.parse_args()
+
 path_args = args.path
+ecdc_host = args.ecdc_host
 
 #descobrir se o path existe e simultamente que seja directório no sistema, e dar erro c.c
 if os.path.exists(path_args) is not True: 
@@ -43,6 +47,16 @@ else :
             print("Folder writable")
 
 time_path = str(datetime.date.today())
+
+# add the ECDC URL
+# we need this complementary file from ECDC because DSSG does not have "amostras" anymore
+
+ecdc_url = 'https://' + ecdc_host + '/covid19/testing/csv/data.csv'
+
+print('')
+print('ECDC url is', ecdc_url, '\n')
+
+csv_url.append(ecdc_url)
 
 # Downloading the csv file + giving name
 
