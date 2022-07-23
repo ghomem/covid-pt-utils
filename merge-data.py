@@ -330,3 +330,5 @@ print('\nInspect with:\n', 'csvtool -t \',\' readable ', merged_path+filename, '
 # as a final step we copy the latest of each type of file to a standard filename in a standard place
 
 copy_files_to_final_location( base_path, final_path)
+
+print('\nMerge process finished')
