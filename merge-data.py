@@ -176,22 +176,26 @@ def write_to_csv( dataframe, path, filename ):
 
 def copy_files_to_final_location ( path, final_path ):
 
+    print('')
     print('copying files from', path, 'to', final_path)
 
     files1 = glob.glob(path + MERGED_DATA_SUBDIR + 'data-*.csv')
     files2 = glob.glob(path + MERGED_DATA_SUBDIR + 'amostras-*.csv')
     files3 = glob.glob(path + DSSG_LATEST_SUBDIR + 'mortalidade-*.csv')
     files4 = glob.glob(path + DSSG_LATEST_SUBDIR + 'vacinas-*.csv')
+    files5 = glob.glob(path + DSSG_LATEST_SUBDIR + 'data_concelhos_incidencia-*.csv')
 
     main_file  = max(files1, key=os.path.getctime)
     tests_file = max(files2, key=os.path.getctime)
     mort_file  = max(files3, key=os.path.getctime)
     vacc_file  = max(files4, key=os.path.getctime)
+    geo_file   = max(files5, key=os.path.getctime)
 
     shutil.copy(main_file,  final_path + '/merged/data.csv')
     shutil.copy(tests_file, final_path + '/merged/amostras.csv')
     shutil.copy(mort_file,  final_path + '/dssg/mortalidade.csv')
     shutil.copy(vacc_file,  final_path + '/dssg/vacinas.csv')
+    shutil.copy(geo_file,   final_path + '/dssg/data_concelhos_incidencia.csv')
 
 ### MAIN ###
 
