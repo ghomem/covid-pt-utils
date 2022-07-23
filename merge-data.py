@@ -16,6 +16,10 @@ HOSP_PATCH_DATE_STR = '15-03-2022'  # the first weekly hospitalizations record f
 INITIAL_DATE = datetime.datetime.strptime(INITIAL_DATE_STR, '%d-%m-%Y').date()
 PATCH_DATE   = datetime.datetime.strptime(PATCH_DATE_STR, '%d-%m-%Y').date()
 
+
+TESTING_PATCH_DATE_STR = '02-06-2022' # the day after the testing data from DSSG stopped flowing
+TESTING_PATCH_DATE     = datetime.datetime.strptime(TESTING_PATCH_DATE_STR, '%d-%m-%Y').date()
+
 # this is a very complete file from the awesome DSSG-PT group, we saved the last complete version
 # to inspect only the new cases and deaths we can use
 # csvtool -t ',' col 1,12,14,15,16 data-2022-03-13.csv | csvtool -t ',' readable
@@ -72,9 +76,9 @@ def get_dgs_info( dgs_dir ):
 
 
 # gets the most recent DSSG info
-def get_dssg_info( dssg_dir ):
+def get_dssg_info( dssg_dir, search_str ):
 
-    dssg_file_list = glob.glob(dssg_dir + 'data-*.csv')
+    dssg_file_list = glob.glob(dssg_dir + search_str + '-*.csv')
     dssg_path      = max(dssg_file_list, key=os.path.getctime)
 
     dssg_data = pd.read_csv(dssg_path)
@@ -82,9 +86,96 @@ def get_dssg_info( dssg_dir ):
     return dssg_data, dssg_path
 
 
+# convert the ECDC week date to a normal date
+def mk_date_from_week_str ( week_str ):
+
+    # 6 is Saturday, we are assuming the values come at the end of the week
+    day_of_the_week = '6'
+    iso_date = datetime.datetime.strptime(week_str + '-' + day_of_the_week, "%Y-W%W-%w").date()
+
+    # this is the format in the DSSG files
+    reverse_date = iso_date.strftime('%d-%m-%Y')
+
+    return reverse_date
+
+
+# gets the most recent ECDC testing data
+def get_ecdc_testing_info ( ecdc_dir ):
+
+    ecdc_file_list = glob.glob(dssg_dir + 'ecdc-*.csv')
+    ecdc_path      = max(ecdc_file_list, key=os.path.getctime)
+
+    ecdc_data = pd.read_csv(ecdc_path)
+
+    # filter for Portugal
+    ecdc_data_PT = ecdc_data[ (ecdc_data['country'] == 'Portugal') & (ecdc_data['level'] == 'national') ]
+
+    converted_dates = [ mk_date_from_week_str(x) for x in ecdc_data_PT['year_week'] ]
+
+    # add column for normal dates
+    ecdc_data_PT.insert(3, 'converted_date', converted_dates)
+
+    # remove unnecessary columns, we can reenable them for debugging if necessary
+    ecdc_data_PT_trimmed = ecdc_data_PT.drop(['country', 'country_code', 'level', 'region', 'region_name', 'testing_data_source' ], axis=1)
+
+    # filger
+
+    return ecdc_data_PT_trimmed, ecdc_path
+
+
+# patch the DSSG testing dataset with data from ECDC
+def merge_testing_data ( dssg_testing_data, ecdc_testing_data, patch_date ):
+
+    date_str_f = ecdc_testing_data['converted_date'].values[-1]
+    date_str_i = dssg_testing_data['data'].values[-1]
+
+    date_f = datetime.datetime.strptime(date_str_f, '%d-%m-%Y').date()
+    date_i = datetime.datetime.strptime(date_str_i, '%d-%m-%Y').date()
+
+    time_delta = date_f - date_i
+
+    ndays_testing = time_delta.days
+
+    # generate the dates we need to have from patch_date on
+    dates, last_date = mk_dates(patch_date, ndays_testing)
+
+    tests_daily = []
+    for d in dates:
+        tests_lookup = ecdc_testing_data [ ecdc_testing_data['converted_date'] == d ]['tests_done'].values
+
+        # either the value for that date is in the ECDC data or it isn't
+        if len(tests_lookup) != 0:
+            tests_daily.append(tests_lookup[0] / 7 ) # we divide by 7 because it is a weekly value
+        else:
+            # write NaN
+            tests_daily.append(np.nan)
+        #print(d, tests_daily[-1])
+
+    # this is the list of fields of this file
+    # data,amostras,amostras_novas,amostras_pcr,amostras_pcr_novas,amostras_antigenio,amostras_antigenio_novas
+    # we only have amostras, the rest is filled with NaN
+    extra_testing_data = pd.DataFrame( {'data': dates, 'amostras': tests_daily, } )
+
+    # interpolate the weekly value
+    extra_testing_data['amostras'] = extra_testing_data['amostras'].interpolate()
+
+    # and finally let's merge the dataframes
+    merged_testing_data = dssg_testing_data.append(extra_testing_data, ignore_index=True, sort=False)
+
+    return merged_testing_data, last_date
+
+
+def write_to_csv( dataframe, path, filename ):
+
+    print('\nSaving', filename, 'at', path)
+
+    full_path = path + filename
+
+    dataframe.to_csv(full_path, index=False)
+
 ### MAIN ###
 
-parser = argparse.ArgumentParser(description='Merge DGS and DSSG files')
+parser = argparse.ArgumentParser(description='Merge DGS, DSSG and ECDC files')
 parser.add_argument('path', type=str, help='path to where files will be stored')
 args = parser.parse_args()
 path_args = args.path
@@ -148,13 +239,13 @@ print_summary(merged_dssg_data)
 # now let's look for the latest dssg file to extract the hospitalizations data
 
 dssg_dir = base_path + DSSG_LATEST_SUBDIR
-dssg_latest_data, dssg_latest_path = get_dssg_info(dssg_dir)
+dssg_latest_data, dssg_latest_path = get_dssg_info(dssg_dir, 'data')
 
 index = dssg_latest_data.loc[ dssg_latest_data['data'] == HOSP_PATCH_DATE_STR ].index[0]
 
 dssg_latest_data_tail = dssg_latest_data.loc[index:]
 
-# let's fetch the weekly values and try to insert them in the extended dataframe
+# let's fetch the weekly values for the hospitalizations and try to insert them in the extended dataframe
 for d in dssg_latest_data_tail['data']:
     hospitalized     = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados'].values[0]
     hospitalized_uci = dssg_latest_data.loc[ dssg_latest_data['data'] == d ]['internados_uci'].values[0]
@@ -171,17 +262,38 @@ for d in dssg_latest_data_tail['data']:
 merged_dssg_data['internados']     = merged_dssg_data['internados'].interpolate()
 merged_dssg_data['internados_uci'] = merged_dssg_data['internados_uci'].interpolate()
 
+# now we need to do the same for the testing data which we now collect from ECDC
+
 # now let's write to CSV
 
-merged_file = 'data-' + str(last_date) + '.csv'
+filename = 'data-' + str(last_date) + '.csv'
 
-merged_path = base_path + MERGED_DATA_SUBDIR + merged_file
+merged_path = base_path + MERGED_DATA_SUBDIR
 
-print('\nSaving CSV at', merged_path)
+write_to_csv( merged_dssg_data, merged_path, filename)
 
 # can be inspected with
 # csvtool -t ',' col 1,12,14,15,16  /path/to/data/merged/data-2022-06-02.csv  |csvtool -t ',' readable - |less
 
-merged_dssg_data.to_csv(merged_path, index=False)
+print('\nInspect with:\n', 'csvtool -t \',\' col 1,12,14,15,16', merged_path+filename, '|csvtool -t \',\' readable - |less' )
 
-print('\nInspect with:\n', 'csvtool -t \',\' col 1,12,14,15,16', merged_path, '|csvtool -t \',\' readable - |less' )
+######## ECDC testing information ########
+
+ecdc_dir = base_path + DSSG_LATEST_SUBDIR # we are for now using the same dir for ECDC
+ecdc_latest_data, ecdc_latest_path = get_ecdc_testing_info(dssg_dir)
+
+dssg_latest_testing_data, dssg_latest_path = get_dssg_info(dssg_dir, 'amostras')
+
+merged_testing_data, last_date_testing = merge_testing_data(dssg_latest_testing_data, ecdc_latest_data, TESTING_PATCH_DATE)
+
+print('\n')
+print(merged_testing_data)
+
+filename = 'amostras-' + str(last_date_testing) + '.csv'
+write_to_csv( merged_testing_data, merged_path, filename)
+
+print('\nInspect with:\n', 'csvtool -t \',\' readable ', merged_path+filename, '|less' )
+
+######## ECDC ########
+
+

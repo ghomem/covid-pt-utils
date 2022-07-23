@@ -20,6 +20,7 @@ csv_url = [ "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/dat
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/vacinas.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_14dias.csv",
             "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/data_concelhos_incidencia.csv",
+            "https://opendata.ecdc.europa.eu/covid19/testing/csv/data.csv", # we need this complementary file from ECDC because DSSG does not have "amostras" anymore
           ]
 
 parser = argparse.ArgumentParser(description='Download DSSG files')
@@ -50,7 +51,11 @@ for url in csv_url:
     name_path_csv = os.path.basename(url)
     name_path_split = name_path_csv.split('.')
     name_path = name_path_split[0]
-    file_name_path = name_path + '-' + time_path + '.csv'
+    # this is to avoid name conflict, if we need for ECDC files in the future we will need to review this
+    if 'ecdc' in url:
+        file_name_path = 'ecdc-' + name_path + '-' + time_path + '.csv'
+    else:
+        file_name_path = name_path + '-' + time_path + '.csv'
     print('saving ' + file_name_path)
     req = requests.get(url)
     url_content = req.content
