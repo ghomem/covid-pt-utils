@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import datetime
+import shutil
 
 ### CONFIG ###
 
@@ -15,7 +16,6 @@ HOSP_PATCH_DATE_STR = '15-03-2022'  # the first weekly hospitalizations record f
 
 INITIAL_DATE = datetime.datetime.strptime(INITIAL_DATE_STR, '%d-%m-%Y').date()
 PATCH_DATE   = datetime.datetime.strptime(PATCH_DATE_STR, '%d-%m-%Y').date()
-
 
 TESTING_PATCH_DATE_STR = '02-06-2022' # the day after the testing data from DSSG stopped flowing
 TESTING_PATCH_DATE     = datetime.datetime.strptime(TESTING_PATCH_DATE_STR, '%d-%m-%Y').date()
@@ -173,24 +173,53 @@ def write_to_csv( dataframe, path, filename ):
 
     dataframe.to_csv(full_path, index=False)
 
+
+def copy_files_to_final_location ( path, final_path ):
+
+    print('')
+    print('copying files from', path, 'to', final_path)
+
+    files1 = glob.glob(path + MERGED_DATA_SUBDIR + 'data-*.csv')
+    files2 = glob.glob(path + MERGED_DATA_SUBDIR + 'amostras-*.csv')
+    files3 = glob.glob(path + DSSG_LATEST_SUBDIR + 'mortalidade-*.csv')
+    files4 = glob.glob(path + DSSG_LATEST_SUBDIR + 'vacinas-*.csv')
+    files5 = glob.glob(path + DSSG_LATEST_SUBDIR + 'data_concelhos_incidencia-*.csv')
+
+    main_file  = max(files1, key=os.path.getctime)
+    tests_file = max(files2, key=os.path.getctime)
+    mort_file  = max(files3, key=os.path.getctime)
+    vacc_file  = max(files4, key=os.path.getctime)
+    geo_file   = max(files5, key=os.path.getctime)
+
+    shutil.copy(main_file,  final_path + '/merged/data.csv')
+    shutil.copy(tests_file, final_path + '/merged/amostras.csv')
+    shutil.copy(mort_file,  final_path + '/dssg/mortalidade.csv')
+    shutil.copy(vacc_file,  final_path + '/dssg/vacinas.csv')
+    shutil.copy(geo_file,   final_path + '/dssg/data_concelhos_incidencia.csv')
+
 ### MAIN ###
 
 parser = argparse.ArgumentParser(description='Merge DGS, DSSG and ECDC files')
-parser.add_argument('path', type=str, help='path to where files will be stored')
+parser.add_argument('path',       type=str, help='path to where files will be stored')
+parser.add_argument('final_path', type=str, help='path to where the latest will be stored with a standard name')
+
 args = parser.parse_args()
-path_args = args.path
 
-if os.path.exists(path_args) is not True:
-    print("There is no folder called", path_args)
-    exit(1)
-else:
-    print("Folder:" + path_args)
+path_args  = args.path
+final_path = args.final_path
 
-if os.access(path_args, os.W_OK) is not True:
-    print("Folder is not writable")
-    exit(1)
-else :
-    print("Folder is writable")
+for p in [ path_args, final_path ]:
+    if os.path.exists(p) is not True:
+        print("There is no folder called", p)
+        exit(1)
+    else:
+        print("Folder:" + path_args)
+
+    if os.access(p, os.W_OK) is not True:
+        print('Folder', p, 'is not writable')
+        exit(1)
+    else:
+        print('Folder', p, 'is writable')
 
 # start the work on data files
 
@@ -296,4 +325,10 @@ print('\nInspect with:\n', 'csvtool -t \',\' readable ', merged_path+filename, '
 
 ######## ECDC ########
 
+### FINAL STEP ######
 
+# as a final step we copy the latest of each type of file to a standard filename in a standard place
+
+copy_files_to_final_location( base_path, final_path)
+
+print('\nMerge process finished')
