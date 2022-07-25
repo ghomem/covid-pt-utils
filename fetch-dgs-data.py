@@ -21,6 +21,9 @@ SIZE_MAX = 60
 
 # our health authority provides daily files with randomly variant names components
 VARIANCE = [ 'xls', 'xlsx', 'excel' ]
+VARIANCE_ON = False
+
+USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0'
 
 ### Main
 
@@ -45,14 +48,25 @@ date_mon  = str(today.month).zfill(2) # to ensure we have the leading zero for s
 
 url_list = []
 
+# on the 25th of July of 2022, DGS heard the word of God and produced a file without variance in the name
+# let's add that simplest option to the list of URLs and if things stabilize this way we might remove the variance handling code at some point
+
 for date_str in date_strs:
-    for size in range (SIZE_MIN, SIZE_MAX):
-        for substr in VARIANCE:
-            # almost the same but the difference is the hiphen vs the underscore before subsstr
-            dgs_url1 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_{substr}-{size}kb.xlsx"""
-            dgs_url2 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}-{substr}-{size}kb.xlsx"""
-            url_list.append(dgs_url1)
-            url_list.append(dgs_url2)
+    dgs_url_simple = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}.xlsx"""
+    print('inserting basic URL', dgs_url_simple)
+    url_list.insert(0, dgs_url_simple)
+
+# God also told DSG to filter the user agent making more difficult, but not impossible, automated downloads
+
+if VARIANCE_ON:
+    for date_str in date_strs:
+        for size in range (SIZE_MIN, SIZE_MAX):
+            for substr in VARIANCE:
+                # almost the same but the difference is the hiphen vs the underscore before subsstr
+                dgs_url1 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}_{substr}-{size}kb.xlsx"""
+                dgs_url2 = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}-{substr}-{size}kb.xlsx"""
+                url_list.append(dgs_url1)
+                url_list.append(dgs_url2)
 
 # check if path exists and is a directory, return error otherwise
 if os.path.exists(path_args) is not True: 
@@ -85,7 +99,8 @@ for url in url_list:
         my_date = date_strs[1]
 
     file_name_path = 'covid_dados' + '-' + my_date + '.xlsx'
-    req = requests.get(url)
+    headers = { 'User-Agent': USER_AGENT }
+    req = requests.get(url, headers=headers)
     status_code = req.status_code
     print('Status ' + str(status_code) + '\n')
 
