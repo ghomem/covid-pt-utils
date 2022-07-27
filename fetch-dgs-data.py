@@ -54,6 +54,7 @@ url_list = []
 for date_str in date_strs:
     dgs_url_simple = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}.xlsx"""
     print('inserting basic URL', dgs_url_simple)
+    # the most recent one will be at the beggining of the list
     url_list.insert(0, dgs_url_simple)
 
 # God also told DSG to filter the user agent making more difficult, but not impossible, automated downloads
@@ -114,8 +115,10 @@ for url in url_list:
         print('Wrote ' + new_file_namepath+ '\n')
         downloads.append(new_file_namepath)
 
-        # exit if we have yesterday and today already
-        if len(downloads) == 2:
+        # once we have one file, we exit
+        # currently the first on the list is the most recent one
+        # so if we have it we don't need anything else
+        if len(downloads) == 1:
             print('Downloaded files', downloads)
             exit(0)
 
