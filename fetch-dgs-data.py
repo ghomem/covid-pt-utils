@@ -121,10 +121,8 @@ for url in url_list:
             os.utime(new_file_namepath, ( os.stat(new_file_namepath).st_mtime-24*3600, os.stat(new_file_namepath).st_mtime-24*3600))
         downloads.append(new_file_namepath)
 
-        # once we have one file, we exit
-        # currently the first on the list is the most recent one
-        # so if we have it we don't need anything else
-        if len(downloads) == 1:
+        # we are currently allowing to downloads because we touch the old one, if it gets downloaded
+        if len(downloads) == 2:
             print('Downloaded files', downloads)
             exit(0)
 
