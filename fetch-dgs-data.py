@@ -88,6 +88,7 @@ else :
 downloads = []
 print('\n')
 
+yesterday = False
 for url in url_list:
     print('Trying ' + url)
     name_path_xls = os.path.basename(url)
@@ -95,9 +96,11 @@ for url in url_list:
     if date_strs[0] in name_path_xls:
         print ('URL from today')
         my_date = date_strs[0]
+        yesterday = False
     if date_strs[1] in name_path_xls:
         print ('URL file from yesterday')
         my_date = date_strs[1]
+        yesterday = True
 
     file_name_path = 'covid_dados' + '-' + my_date + '.xlsx'
     headers = { 'User-Agent': USER_AGENT }
@@ -113,6 +116,9 @@ for url in url_list:
         xls_file.write(url_content)
         xls_file.close()
         print('Wrote ' + new_file_namepath+ '\n')
+        # touch the file appropriately
+        if yesterday:
+            os.utime(new_file_namepath, ( os.stat(new_file_namepath).st_mtime-24*3600, os.stat(new_file_namepath).st_mtime-24*3600))
         downloads.append(new_file_namepath)
 
         # once we have one file, we exit
