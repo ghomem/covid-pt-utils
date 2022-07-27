@@ -20,8 +20,8 @@ SIZE_MIN = 40
 SIZE_MAX = 60
 
 # our health authority provides daily files with randomly variant names components
-VARIANCE = [ 'xls', 'xlsx', 'excel' ]
-VARIANCE_ON = False
+VARIANCE = [ 'xls', 'xlsx', 'excel', 'XLS' ]
+VARIANCE_ON = True
 
 USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0'
 
@@ -41,7 +41,7 @@ yesterday = datetime.date.today() - datetime.timedelta(days = 1)
 today     = datetime.date.today()
 
 # yesterday and then today
-date_strs = [ str(yesterday), str(today) ]
+date_strs = [ str(today), str(yesterday) ]
 
 date_year = today.year
 date_mon  = str(today.month).zfill(2) # to ensure we have the leading zero for single digit months
@@ -55,7 +55,7 @@ for date_str in date_strs:
     dgs_url_simple = f"""https://{base_url}/wp-content/uploads/{date_year}/{date_mon}/covid_dados_{date_str}.xlsx"""
     print('inserting basic URL', dgs_url_simple)
     # the most recent one will be at the beggining of the list
-    url_list.insert(0, dgs_url_simple)
+    url_list.append(dgs_url_simple)
 
 # God also told DSG to filter the user agent making more difficult, but not impossible, automated downloads
 
@@ -93,10 +93,10 @@ for url in url_list:
     name_path_xls = os.path.basename(url)
     # fix the stupid name given by DGS ( _xls-37kb ... )
     if date_strs[0] in name_path_xls:
-        print ('URL from yesterday')
+        print ('URL from today')
         my_date = date_strs[0]
     if date_strs[1] in name_path_xls:
-        print ('URL file from today')
+        print ('URL file from yesterday')
         my_date = date_strs[1]
 
     file_name_path = 'covid_dados' + '-' + my_date + '.xlsx'
