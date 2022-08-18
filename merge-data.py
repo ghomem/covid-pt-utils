@@ -67,7 +67,7 @@ def get_dgs_info( dgs_dir ):
 
     # find the latest available file
     dgs_file_list = glob.glob(dgs_dir + '/covid_dados-*.xlsx')
-    dgs_path      = max(dgs_file_list, key=os.path.getctime)
+    dgs_path      = max(dgs_file_list, key=os.path.getmtime)  # mtime instead of ctime, could have been touched
 
     # read the second tab of the excel file
     dgs_data = pd.read_excel(dgs_path, sheet_name=1)
