@@ -20,7 +20,7 @@ SIZE_MIN = 40
 SIZE_MAX = 60
 
 # our health authority provides daily files with randomly variant names components
-VARIANCE = [ 'xls', 'xlsx', 'excel', 'XLS' ]
+VARIANCE = [ 'xls', 'xlsx', 'excel', 'XLS', 'xlxs' ]
 VARIANCE_ON = True
 
 USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0'
