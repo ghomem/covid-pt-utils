@@ -18,10 +18,11 @@ from os import path
 
 SIZE_MIN = 40
 SIZE_MAX = 60
+STRIP_DASHES = True # they changed the filename format again at 15/02/2023 :-)
 
 # our health authority provides daily files with randomly variant names components
 VARIANCE = [ 'xls', 'xlsx', 'excel', 'XLS', 'xlxs' ]
-VARIANCE_ON = True
+VARIANCE_ON = False
 
 USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0'
 
@@ -40,8 +41,15 @@ base_url  = args.base_url
 yesterday = datetime.date.today() - datetime.timedelta(days = 1)
 today     = datetime.date.today()
 
+str_yesterday = str(yesterday)
+str_today     = str(today)
+
+if STRIP_DASHES:
+    str_yesterday = str_yesterday.replace('-', '')
+    str_today = str_today.replace('-', '')
+
 # yesterday and then today
-date_strs = [ str(today), str(yesterday) ]
+date_strs = [ str_today, str_yesterday ]
 
 date_year = today.year
 date_mon  = str(today.month).zfill(2) # to ensure we have the leading zero for single digit months
