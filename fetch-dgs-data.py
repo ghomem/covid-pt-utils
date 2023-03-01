@@ -110,6 +110,10 @@ for url in url_list:
         my_date = date_strs[1]
         yesterday = True
 
+    if STRIP_DASHES:
+        # put the dashes on the output file
+        my_date = my_date[:4] + '-' + my_date[4:6] + '-' + my_date[6:]
+
     file_name_path = 'covid_dados' + '-' + my_date + '.xlsx'
     headers = { 'User-Agent': USER_AGENT }
     req = requests.get(url, headers=headers)
