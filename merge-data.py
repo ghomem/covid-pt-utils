@@ -288,8 +288,8 @@ for d in dssg_latest_data_tail['data']:
 
 # now let's interpolate to compensate for the spaced hospitalization data
 
-merged_dssg_data['internados']     = merged_dssg_data['internados'].interpolate()
-merged_dssg_data['internados_uci'] = merged_dssg_data['internados_uci'].interpolate()
+merged_dssg_data['internados']     = merged_dssg_data['internados'].interpolate(limit=7)
+merged_dssg_data['internados_uci'] = merged_dssg_data['internados_uci'].interpolate(limit=7)
 
 # now we need to do the same for the testing data which we now collect from ECDC
 
